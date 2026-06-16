@@ -1,19 +1,101 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-sudo apt update
-sudo apt install -y \
-  git \
-  curl \
-  build-essential \
-  tree-sitter-cli \
-  python3 \
-  python3-venv
-
-if ! command -v bob >/dev/null 2>&1; then
-  curl -fsSL https://raw.githubusercontent.com/MordechaiHadad/bob/master/scripts/install.sh | bash
-fi
-
 export PATH="$HOME/.local/bin:$HOME/.local/share/bob/nvim-bin:$PATH"
 
+echo "[INFO] Start LazyVim bootstrap"
+
+# Install packages if sudo is available.
+if command -v sudo >/dev/null 2>&1 && sudo -v >/dev/null 2>&1; then
+  echo "[INFO] sudo is available. Install packages."
+
+  sudo apt update
+  sudo apt install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
+    tree-sitter-cli \
+    python3 \
+    python3-venv \
+    unzip
+else
+  echo "[WARN] sudo is not available. Skip apt install."
+fi
+
+# Install bob if it is not installed.
+if ! command -v bob >/dev/null 2>&1; then
+  echo "[INFO] bob is not installed. Install bob."
+
+  mkdir -p "$HOME/.local/bin"
+  mkdir -p "$HOME/.local/share/bob_bin"
+
+  if command -v curl >/dev/null 2>&1; then
+    echo "[INFO] Use curl to install bob."
+    curl -fsSL https://raw.githubusercontent.com/MordechaiHadad/bob/master/scripts/install.sh | bash
+
+  elif command -v wget >/dev/null 2>&1; then
+    echo "[INFO] curl not found. Use wget to install bob."
+
+    if ! command -v python3 >/dev/null 2>&1; then
+      echo "[ERROR] python3 is required to extract bob zip."
+      exit 1
+    fi
+
+    tmpdir="$(mktemp -d)"
+    zipfile="$tmpdir/bob.zip"
+
+    wget -qO "$zipfile" \
+      "https://github.com/MordechaiHadad/bob/releases/latest/download/bob-linux-x86_64.zip"
+
+    python3 - "$zipfile" "$tmpdir" <<'PY'
+import sys
+import zipfile
+
+zip_path = sys.argv[1]
+out_dir = sys.argv[2]
+
+with zipfile.ZipFile(zip_path) as z:
+    z.extractall(out_dir)
+PY
+
+    bob_bin="$(find "$tmpdir" -type f -name bob | head -n 1)"
+
+    if [ -z "$bob_bin" ]; then
+      echo "[ERROR] bob binary not found."
+      exit 1
+    fi
+
+    cp "$bob_bin" "$HOME/.local/share/bob_bin/bob"
+    chmod +x "$HOME/.local/share/bob_bin/bob"
+    ln -sf "$HOME/.local/share/bob_bin/bob" "$HOME/.local/bin/bob"
+
+    rm -rf "$tmpdir"
+
+  else
+    echo "[ERROR] curl or wget is required to install bob."
+    exit 1
+  fi
+else
+  echo "[INFO] bob is already installed."
+fi
+
+# Install Neovim with bob.
+echo "[INFO] Install Neovim stable with bob."
 bob use stable
+
+# Add PATH to .bashrc.
+path_line='export PATH="$HOME/.local/bin:$HOME/.local/share/bob/nvim-bin:$PATH"'
+
+touch "$HOME/.bashrc"
+
+if ! grep -Fq "$path_line" "$HOME/.bashrc"; then
+  echo "" >> "$HOME/.bashrc"
+  echo "# bob and user local binaries" >> "$HOME/.bashrc"
+  echo "$path_line" >> "$HOME/.bashrc"
+  echo "[INFO] PATH added to .bashrc."
+else
+  echo "[INFO] PATH already exists in .bashrc."
+fi
+
+echo "[INFO] Done. Run: source ~/.bashrc"
