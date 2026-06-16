@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+sudo apt update
+sudo apt install -y \
+  git \
+  curl \
+  build-essential \
+  tree-sitter-cli \
+  python3 \
+  python3-venv
+
+if ! command -v bob >/dev/null 2>&1; then
+  curl -fsSL https://raw.githubusercontent.com/MordechaiHadad/bob/master/scripts/install.sh | bash
+fi
+
+export PATH="$HOME/.local/bin:$HOME/.local/share/bob/nvim-bin:$PATH"
+
+bob use stable
