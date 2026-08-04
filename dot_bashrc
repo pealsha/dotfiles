@@ -132,3 +132,8 @@ export NVM_DIR="$HOME/.nvm"
 
 alias cppdebug='g++ -std=c++20 -Wall -Wextra -O2 -DDEBUG main.cpp -o main && ./main'
 alias cppbuild='g++ -std=c++20 -Wall -Wextra -O2 main.cpp -o main ./main'
+
+# Load machine-local secrets and settings that must not be tracked by chezmoi.
+if [ -f ~/.bashrc.local ]; then
+    . ~/.bashrc.local
+fi
