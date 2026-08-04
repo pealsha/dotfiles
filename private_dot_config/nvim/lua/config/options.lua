@@ -8,19 +8,23 @@ vim.opt.shiftwidth = 4
 vim.opt.softtabstop = 4
 vim.opt.expandtab = true
 
--- Sync Neovim clipboard with the Windows clipboard when running in WSL.
+-- Sync Neovim clipboard with the system clipboard via OSC 52 escape sequences.
+-- Works over WSL/SSH regardless of WSL interop; the terminal emulator relays
+-- yanks to the Windows clipboard. Paste from the OS clipboard depends on
+-- terminal support (Windows Terminal doesn't reply), so use the terminal's own
+-- paste (Ctrl+Shift+V) to insert OS clipboard contents into Neovim.
 if vim.fn.has("wsl") == 1 then
   vim.opt.clipboard = "unnamedplus"
+  local osc52 = require("vim.ui.clipboard.osc52")
   vim.g.clipboard = {
-    name = "WslClipboard",
+    name = "OSC 52",
     copy = {
-      ["+"] = "clip.exe",
-      ["*"] = "clip.exe",
+      ["+"] = osc52.copy("+"),
+      ["*"] = osc52.copy("*"),
     },
     paste = {
-      ["+"] = { "powershell.exe", "-NoProfile", "-Command", "Get-Clipboard" },
-      ["*"] = { "powershell.exe", "-NoProfile", "-Command", "Get-Clipboard" },
+      ["+"] = osc52.paste("+"),
+      ["*"] = osc52.paste("*"),
     },
-    cache_enabled = 0,
   }
 end
