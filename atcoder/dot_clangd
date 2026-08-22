@@ -1,0 +1,8 @@
+CompileFlags:
+  Remove:
+    - -std=*
+  Add:
+    - -std=gnu++23
+    - -DDEBUG
+    - -I/home/hinoerusi/.config/atcoder-cli-nodejs/cpp
+    - -I/home/hinoerusi/lib/ac-library-master

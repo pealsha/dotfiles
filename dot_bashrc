@@ -116,7 +116,8 @@ if ! shopt -oq posix; then
     fi
 fi
 
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:/home/hinoerusi/lib/ac-library-master
+# ACL is added only by the AtCoder build aliases below.
+unset CPLUS_INCLUDE_PATH
 ulimit -s unlimited
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
@@ -129,13 +130,9 @@ fi
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # AtCoder: run these commands from a task directory containing main.cpp.
-alias accdebug='g++ -std=gnu++20 -O0 -g3 -Wall -Wextra -DDEBUG main.cpp -o main'
-alias accbuild='g++ -std=gnu++20 -O2 -Wall -Wextra main.cpp -o main'
-alias acctest='accbuild && oj test -c ./main -d tests'
-
-# Backward-compatible names.
-alias cppdebug='accdebug'
-alias cppbuild='accbuild'
+alias accdebug='g++ -std=gnu++23 -O0 -g3 -Wall -Wextra -DDEBUG -I"$HOME/.config/atcoder-cli-nodejs/cpp" -I"$HOME/lib/ac-library-master" main.cpp -o main'
+alias acctest='g++ -std=gnu++23 -O2 -Wall -Wextra -I"$HOME/lib/ac-library-master" main.cpp -o main && oj test -c ./main -d tests'
+alias acccheck='g++ -std=gnu++23 -O1 -g -Wall -Wextra -Wshadow -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -I"$HOME/lib/ac-library-master" -fsanitize=address,undefined -fno-omit-frame-pointer main.cpp -o main.san && ASAN_OPTIONS=detect_leaks=0 oj test -c ./main.san -d tests'
 
 # Load machine-local secrets and settings that must not be tracked by chezmoi.
 if [ -f ~/.bashrc.local ]; then
