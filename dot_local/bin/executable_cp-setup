@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
+source "$HOME/.config/competitive-programming/env.sh"
+
+for tool in "$CP_CXX" node npm pipx git; do
+    if ! command -v "$tool" >/dev/null; then
+        echo "Missing: $tool" >&2
+        echo 'Ubuntu 24.04: sudo apt update && sudo apt install g++-13 clangd nodejs npm pipx git' >&2
+        exit 1
+    fi
+done
+
+if ! command -v acc >/dev/null || [[ $(acc --version) != "$CP_ACC_VERSION" ]]; then
+    npm install --prefix "$HOME/.local" --global "atcoder-cli@$CP_ACC_VERSION"
+    hash -r
+fi
+if [[ ! -x "$HOME/.local/bin/oj" ]]; then
+    pipx install "online-judge-tools==$CP_OJ_VERSION"
+fi
+# Pin the API client as well: it handles AtCoder downloads and submissions.
+oj_python=$(readlink -f "$HOME/.local/bin/oj")
+oj_python="${oj_python%/*}/python"
+if [[ ! -x "$oj_python" ]]; then
+    echo 'Expected ~/.local/bin/oj to belong to a pipx virtual environment.' >&2
+    exit 1
+fi
+if ! "$oj_python" -c 'import importlib.metadata as m, sys; sys.exit(m.version("online-judge-tools") != sys.argv[1] or m.version("online-judge-api-client") != sys.argv[2])' "$CP_OJ_VERSION" "$CP_OJ_API_VERSION"; then
+    pipx runpip online-judge-tools install "online-judge-tools==$CP_OJ_VERSION" "online-judge-api-client==$CP_OJ_API_VERSION"
+fi
+
+if [[ ! -e "$CP_ACL_DIR" ]]; then
+    mkdir -p "$(dirname "$CP_ACL_DIR")"
+    git clone https://github.com/atcoder/ac-library.git "$CP_ACL_DIR"
+    git -C "$CP_ACL_DIR" checkout --detach "$CP_ACL_REV"
+elif [[ $(git -C "$CP_ACL_DIR" rev-parse HEAD) != "$CP_ACL_REV" ]]; then
+    echo "ACL already exists at a different revision: $CP_ACL_DIR" >&2
+    echo "Expected $CP_ACL_REV; existing checkout was preserved." >&2
+    exit 1
+fi
+
+echo 'Ready: C++23, acc, oj, and ACL. Run acctest from a task directory.'

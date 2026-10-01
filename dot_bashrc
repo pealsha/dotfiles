@@ -121,7 +121,7 @@ unset CPLUS_INCLUDE_PATH
 ulimit -s unlimited
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="$HOME/.local/share/bob/nvim-bin:$PATH"
-. "$HOME/.cargo/env"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 # Keep interactive shells aligned with Codex CLI subprocesses.
 if [ -f "$HOME/.config/codex/env.sh" ]; then
@@ -129,10 +129,8 @@ if [ -f "$HOME/.config/codex/env.sh" ]; then
 fi
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-# AtCoder: run these commands from a task directory containing main.cpp.
-alias accdebug='g++ -std=gnu++23 -O0 -g3 -Wall -Wextra -DDEBUG -I"$HOME/.config/atcoder-cli-nodejs/cpp" -I"$HOME/lib/ac-library-master" main.cpp -o main'
-alias acctest='g++ -std=gnu++23 -O2 -Wall -Wextra -I"$HOME/lib/ac-library-master" main.cpp -o main && oj test -c ./main -d tests'
-alias acccheck='g++ -std=gnu++23 -O1 -g -Wall -Wextra -Wshadow -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -I"$HOME/lib/ac-library-master" -fsanitize=address,undefined -fno-omit-frame-pointer main.cpp -o main.san && ASAN_OPTIONS=detect_leaks=0 oj test -c ./main.san -d tests'
+# AtCoder commands are managed in ~/.local/bin (accdebug, acctest, acccheck).
+unalias accdebug acctest acccheck 2>/dev/null || true
 
 # Load machine-local secrets and settings that must not be tracked by chezmoi.
 if [ -f ~/.bashrc.local ]; then

@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
+source "$HOME/.config/competitive-programming/env.sh"
+
+mode=${1:-}
+if [[ $# -gt 0 ]]; then shift; fi
+source_file=${1:-main.cpp}
+test_dir=${2:-tests}
+if [[ $# -gt 2 ]]; then
+    echo 'Usage: cp-build {debug|test|check} [source.cpp] [test-directory]' >&2
+    exit 2
+fi
+
+flags=(-std="$CP_STD" -Wall -Wextra -I"$CP_ACL_DIR")
+case "$mode" in
+    debug)
+        flags+=(-O0 -g3 -DDEBUG -I"$CP_TEMPLATE_DIR")
+        output=main
+        ;;
+    test)
+        flags+=(-O2)
+        output=main
+        ;;
+    check)
+        flags+=(-O1 -g -Wshadow -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC
+            -fsanitize=address,undefined -fno-omit-frame-pointer)
+        output=main.san
+        ;;
+    *)
+        echo 'Usage: cp-build {debug|test|check} [source.cpp] [test-directory]' >&2
+        exit 2
+        ;;
+esac
+
+command -v "$CP_CXX" >/dev/null || {
+    echo "Missing compiler: $CP_CXX. See the dotfiles README for setup." >&2
+    exit 1
+}
+# Ignore a global include path so unrelated headers cannot shadow the STL.
+unset CPLUS_INCLUDE_PATH
+if [[ "$mode" == check ]]; then
+    # ASan's shadow memory can fail with an unlimited stack.
+    ulimit -s 8192
+else
+    ulimit -s unlimited
+fi
+"$CP_CXX" "${flags[@]}" "$source_file" -o "$output"
+if [[ "$mode" == test ]]; then
+    oj test -c ./main -d "$test_dir"
+elif [[ "$mode" == check ]]; then
+    ASAN_OPTIONS="${ASAN_OPTIONS:-detect_leaks=0}" oj test -c ./main.san -d "$test_dir"
+fi

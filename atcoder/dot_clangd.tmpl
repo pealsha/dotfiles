@@ -1,0 +1,9 @@
+CompileFlags:
+  Compiler: g++-13
+  Remove:
+    - -std=*
+  Add:
+    - -std=gnu++23
+    - -DDEBUG
+    - {{ printf "-I%s/.config/atcoder-cli-nodejs/cpp" .chezmoi.homeDir | quote }}
+    - {{ printf "-I%s/lib/ac-library-master" .chezmoi.homeDir | quote }}
