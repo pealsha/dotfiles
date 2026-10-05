@@ -22,3 +22,12 @@ vim.api.nvim_create_autocmd({ "FileType" }, {
     vim.b.autoformat = false
   end,
 })
+
+-- 日本語を英語の誤字として扱わないよう、プレーンテキストでは
+-- LazyVim が自動で有効にするスペルチェックを無効にする。
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "text",
+  callback = function()
+    vim.opt_local.spell = false
+  end,
+})
