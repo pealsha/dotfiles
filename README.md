@@ -15,7 +15,7 @@ Ubuntu 24.04 / WSLで日常的に使うシェル、エディター、開発用�
 
 ## 導入と更新
 
-### 初めて導入する端末
+### インストール
 
 Ubuntu 24.04 / WSLに[chezmoiをインストール](https://www.chezmoi.io/install/)してから、次のコマンドを実行する。`chezmoi init`でこのリポジトリを取得し、`chezmoi diff`で端末の設定との差分を確認する。`chezmoi apply`で設定ファイルとスクリプトを端末に配置する。
 
@@ -27,7 +27,7 @@ chezmoi apply
 
 Neovimの導入とC++環境のセットアップは、それぞれの節を参照する。
 
-### 設定を更新する
+### ローカルdotfilesの更新
 
 共通設定を変更するときは、chezmoiのソースディレクトリにあるファイルを編集する。`chezmoi diff`で確認してから`chezmoi apply`で使用中の端末に適用し、GitHubへpushして別端末でも使えるようにする。
 
@@ -99,7 +99,7 @@ acc submit     # main.cppを提出
 
 ビルドコマンドは`~/.local/bin`に配置されるBashスクリプトで、Bash以外のシェルからも呼び出せる。`acccheck`では、スタック上限が無制限の場合にASanのメモリー確保が失敗することがあるため、上限を8 MiBに設定する。
 
-### 設定を変更するとき
+### 設定の更新
 
 chezmoiのソースディレクトリで、共通設定とツールのバージョンは`private_dot_config/competitive-programming/env.sh`、解答用テンプレートは`private_dot_config/atcoder-cli-nodejs/cpp/`を編集する。以前のテンプレート用Gitリポジトリが`~/.config/atcoder-cli-nodejs/cpp/`に残っている場合も、共有する変更はこのdotfilesに記録する。
 
