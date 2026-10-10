@@ -1,0 +1,12 @@
+# Machine-local files and authentication state must never enter this repo.
+**/*bashrc.local
+**/*tmux.conf.local
+**/.ssh/
+/private_dot_ssh/
+/dot_ssh/
+**/session.json
+**/cookie.jar
+**/cookies.txt
+/private_dot_config/competitive-programming/local.sh
+/private_dot_config/online-judge-tools/
+/dot_local/share/online-judge-tools/

@@ -8,23 +8,39 @@ vim.opt.shiftwidth = 4
 vim.opt.softtabstop = 4
 vim.opt.expandtab = true
 
--- Sync Neovim clipboard with the system clipboard via OSC 52 escape sequences.
--- Works over WSL/SSH regardless of WSL interop; the terminal emulator relays
--- yanks to the Windows clipboard. Paste from the OS clipboard depends on
--- terminal support (Windows Terminal doesn't reply), so use the terminal's own
--- paste (Ctrl+Shift+V) to insert OS clipboard contents into Neovim.
-if vim.fn.has("wsl") == 1 then
+-- Send copies to the connecting terminal in WSL and SSH sessions.
+-- NVIM_OSC52=0 disables this provider; NVIM_OSC52=1 also enables it in
+-- existing tmux panes whose shell does not have SSH environment variables.
+local use_osc52 = vim.env.NVIM_OSC52 == "1"
+  or (
+    vim.env.NVIM_OSC52 ~= "0"
+    and (vim.fn.has("wsl") == 1 or vim.env.SSH_TTY ~= nil or vim.env.SSH_CONNECTION ~= nil)
+  )
+if use_osc52 then
   vim.opt.clipboard = "unnamedplus"
   local osc52 = require("vim.ui.clipboard.osc52")
+  local copied = { { "" }, "v" }
+  local function copy(register)
+    local send = osc52.copy(register)
+    return function(lines, regtype)
+      copied = { vim.deepcopy(lines), regtype }
+      send(lines, regtype)
+    end
+  end
+  -- Never query the terminal's clipboard: unsupported queries can block p.
+  -- Use terminal paste (e.g. Ctrl+Shift+V in Insert mode) for OS contents.
+  local function paste()
+    return vim.deepcopy(copied)
+  end
   vim.g.clipboard = {
-    name = "OSC 52",
+    name = "OSC 52 (copy only)",
     copy = {
-      ["+"] = osc52.copy("+"),
-      ["*"] = osc52.copy("*"),
+      ["+"] = copy("+"),
+      ["*"] = copy("*"),
     },
     paste = {
-      ["+"] = osc52.paste("+"),
-      ["*"] = osc52.paste("*"),
+      ["+"] = paste,
+      ["*"] = paste,
     },
   }
 end
