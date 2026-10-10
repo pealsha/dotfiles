@@ -1,1 +1,16 @@
 README.md
+.gitignore
+docs
+docs/**
+
+# Target paths: preserve machine-local settings and authentication state.
+.bashrc.local
+.tmux.conf.local
+.ssh
+.ssh/**
+.config/competitive-programming/local.sh
+.config/atcoder-cli-nodejs/session.json
+.config/online-judge-tools
+.config/online-judge-tools/**
+.local/share/online-judge-tools
+.local/share/online-judge-tools/**
